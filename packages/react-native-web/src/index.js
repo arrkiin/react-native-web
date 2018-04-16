@@ -8,7 +8,13 @@ import TextPropTypes from './exports/TextPropTypes';
 import ViewPropTypes from './exports/ViewPropTypes';
 
 // APIs
+import createAnimatedComponent from './exports/createAnimatedComponent';
 import Animated from './exports/Animated';
+import AnimatedView from './exports/AnimatedView';
+import AnimatedValue from './exports/AnimatedValue';
+import AnimatedTiming from './exports/AnimatedTiming';
+import AnimatedSpring from './exports/AnimatedSpring';
+import AnimatedParallel from './exports/AnimatedParallel';
 import AppRegistry from './exports/AppRegistry';
 import AppState from './exports/AppState';
 import AsyncStorage from './exports/AsyncStorage';
@@ -75,7 +81,13 @@ export {
   TextPropTypes,
   ViewPropTypes,
   // APIs
+  createAnimatedComponent,
   Animated,
+  AnimatedView,
+  AnimatedValue,
+  AnimatedTiming,
+  AnimatedSpring,
+  AnimatedParallel,
   AppRegistry,
   AppState,
   AsyncStorage,
@@ -141,7 +153,13 @@ const ReactNative = {
   TextPropTypes,
   ViewPropTypes,
   // APIs
+  createAnimatedComponent,
   Animated,
+  AnimatedView,
+  AnimatedValue,
+  AnimatedTiming,
+  AnimatedSpring,
+  AnimatedParallel,
   AppRegistry,
   AppState,
   AsyncStorage,

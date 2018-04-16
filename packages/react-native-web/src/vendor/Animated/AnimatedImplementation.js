@@ -24,24 +24,18 @@ const AnimatedTracking = require('./nodes/AnimatedTracking');
 const AnimatedValue = require('./nodes/AnimatedValue');
 const AnimatedValueXY = require('./nodes/AnimatedValueXY');
 const DecayAnimation = require('./animations/DecayAnimation');
-const SpringAnimation = require('./animations/SpringAnimation');
-const TimingAnimation = require('./animations/TimingAnimation');
+const spring = require('./animations/spring');
+const timing = require('./animations/timing');
+const parallel = require('./animations/parallel');
+const _combineCallbacks = require('./animations/combineCallbacks');
+const maybeVectorAnim = require('./animations/maybeVectorAnim');
 
 const createAnimatedComponent = require('./createAnimatedComponent');
 
 import type { AnimationConfig, EndCallback, EndResult } from './animations/Animation';
-import type { TimingAnimationConfig } from './animations/TimingAnimation';
 import type { DecayAnimationConfig } from './animations/DecayAnimation';
-import type { SpringAnimationConfig } from './animations/SpringAnimation';
 import type { Mapping, EventConfig } from './AnimatedEvent';
-
-type CompositeAnimation = {
-  start: (callback?: ?EndCallback) => void,
-  stop: () => void,
-  reset: () => void,
-  _startNativeLoop: (iterations?: number) => void,
-  _isUsingNativeDriver: () => boolean
-};
+import type { CompositeAnimation } from './animations/CompositeAnimation';
 
 const add = function(a: AnimatedNode | number, b: AnimatedNode | number): AnimatedAddition {
   return new AnimatedAddition(a, b);
@@ -64,148 +58,6 @@ const modulo = function(a: AnimatedNode, modulus: number): AnimatedModulo {
 
 const diffClamp = function(a: AnimatedNode, min: number, max: number): AnimatedDiffClamp {
   return new AnimatedDiffClamp(a, min, max);
-};
-
-const _combineCallbacks = function(callback: ?EndCallback, config: AnimationConfig) {
-  if (callback && config.onComplete) {
-    return (...args) => {
-      config.onComplete && config.onComplete(...args);
-      callback && callback(...args);
-    };
-  } else {
-    return callback || config.onComplete;
-  }
-};
-
-const maybeVectorAnim = function(
-  value: AnimatedValue | AnimatedValueXY,
-  config: Object,
-  anim: (value: AnimatedValue, config: Object) => CompositeAnimation
-): ?CompositeAnimation {
-  if (value instanceof AnimatedValueXY) {
-    const configX = { ...config };
-    const configY = { ...config };
-    for (const key in config) {
-      const { x, y } = config[key];
-      if (x !== undefined && y !== undefined) {
-        configX[key] = x;
-        configY[key] = y;
-      }
-    }
-    const aX = anim((value: AnimatedValueXY).x, configX);
-    const aY = anim((value: AnimatedValueXY).y, configY);
-    // We use `stopTogether: false` here because otherwise tracking will break
-    // because the second animation will get stopped before it can update.
-    return parallel([aX, aY], { stopTogether: false });
-  }
-  return null;
-};
-
-const spring = function(
-  value: AnimatedValue | AnimatedValueXY,
-  config: SpringAnimationConfig
-): CompositeAnimation {
-  const start = function(
-    animatedValue: AnimatedValue | AnimatedValueXY,
-    configuration: SpringAnimationConfig,
-    callback?: ?EndCallback
-  ): void {
-    callback = _combineCallbacks(callback, configuration);
-    const singleValue: any = animatedValue;
-    const singleConfig: any = configuration;
-    singleValue.stopTracking();
-    if (configuration.toValue instanceof AnimatedNode) {
-      singleValue.track(
-        new AnimatedTracking(
-          singleValue,
-          configuration.toValue,
-          SpringAnimation,
-          singleConfig,
-          callback
-        )
-      );
-    } else {
-      singleValue.animate(new SpringAnimation(singleConfig), callback);
-    }
-  };
-  return (
-    maybeVectorAnim(value, config, spring) || {
-      start: function(callback?: ?EndCallback): void {
-        start(value, config, callback);
-      },
-
-      stop: function(): void {
-        value.stopAnimation();
-      },
-
-      reset: function(): void {
-        value.resetAnimation();
-      },
-
-      _startNativeLoop: function(iterations?: number): void {
-        const singleConfig = { ...config, iterations };
-        start(value, singleConfig);
-      },
-
-      _isUsingNativeDriver: function(): boolean {
-        return config.useNativeDriver || false;
-      }
-    }
-  );
-};
-
-const timing = function(
-  value: AnimatedValue | AnimatedValueXY,
-  config: TimingAnimationConfig
-): CompositeAnimation {
-  const start = function(
-    animatedValue: AnimatedValue | AnimatedValueXY,
-    configuration: TimingAnimationConfig,
-    callback?: ?EndCallback
-  ): void {
-    callback = _combineCallbacks(callback, configuration);
-    const singleValue: any = animatedValue;
-    const singleConfig: any = configuration;
-    singleValue.stopTracking();
-    if (configuration.toValue instanceof AnimatedNode) {
-      singleValue.track(
-        new AnimatedTracking(
-          singleValue,
-          configuration.toValue,
-          TimingAnimation,
-          singleConfig,
-          callback
-        )
-      );
-    } else {
-      singleValue.animate(new TimingAnimation(singleConfig), callback);
-    }
-  };
-
-  return (
-    maybeVectorAnim(value, config, timing) || {
-      start: function(callback?: ?EndCallback): void {
-        start(value, config, callback);
-      },
-
-      stop: function(): void {
-        value.stopAnimation();
-      },
-
-      reset: function(): void {
-        value.resetAnimation();
-      },
-
-      _startNativeLoop: function(iterations?: number): void {
-        const singleConfig = { ...config, iterations };
-        start(value, singleConfig);
-      },
-
-      _isUsingNativeDriver: function(): boolean {
-        return config.useNativeDriver || false;
-      }
-    }
-  );
 };
 
 const decay = function(
@@ -302,77 +154,6 @@ const sequence = function(animations: Array<CompositeAnimation>): CompositeAnima
       return false;
     }
   };
-};
-
-type ParallelConfig = {
-  stopTogether?: boolean // If one is stopped, stop all.  default: true
-};
-const parallel = function(
-  animations: Array<CompositeAnimation>,
-  config?: ?ParallelConfig
-): CompositeAnimation {
-  let doneCount = 0;
-  // Make sure we only call stop() at most once for each animation
-  const hasEnded = {};
-  const stopTogether = !(config && config.stopTogether === false);
-
-  const result = {
-    start: function(callback?: ?EndCallback) {
-      if (doneCount === animations.length) {
-        callback && callback({ finished: true });
-        return;
-      }
-
-      animations.forEach((animation, idx) => {
-        const cb = function(endResult) {
-          hasEnded[idx] = true;
-          doneCount++;
-          if (doneCount === animations.length) {
-            doneCount = 0;
-            callback && callback(endResult);
-            return;
-          }
-
-          if (!endResult.finished && stopTogether) {
-            result.stop();
-          }
-        };
-
-        if (!animation) {
-          cb({ finished: true });
-        } else {
-          animation.start(cb);
-        }
-      });
-    },
-
-    stop: function(): void {
-      animations.forEach((animation, idx) => {
-        !hasEnded[idx] && animation.stop();
-        hasEnded[idx] = true;
-      });
-    },
-
-    reset: function(): void {
-      animations.forEach((animation, idx) => {
-        animation.reset();
-        hasEnded[idx] = false;
-        doneCount = 0;
-      });
-    },
-
-    _startNativeLoop: function() {
-      throw new Error(
-        'Loops run using the native driver cannot contain Animated.parallel animations'
-      );
-    },
-
-    _isUsingNativeDriver: function(): boolean {
-      return false;
-    }
-  };
-
-  return result;
 };
 
 const delay = function(time: number): CompositeAnimation {

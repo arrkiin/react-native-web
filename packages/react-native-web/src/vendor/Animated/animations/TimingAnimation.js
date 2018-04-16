@@ -10,12 +10,12 @@
  */
 'use strict';
 
-const AnimatedValue = require('../nodes/AnimatedValue');
-const AnimatedValueXY = require('../nodes/AnimatedValueXY');
 const Animation = require('./Animation');
 
 const { shouldUseNativeDriver } = require('../NativeAnimatedHelper');
 
+import type AnimatedValue from '../nodes/AnimatedValue';
+import type AnimatedValueXY from '../nodes/AnimatedValueXY';
 import type { AnimationConfig, EndCallback } from './Animation';
 
 export type TimingAnimationConfig = AnimationConfig & {

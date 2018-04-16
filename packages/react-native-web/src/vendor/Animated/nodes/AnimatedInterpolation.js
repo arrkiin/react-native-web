@@ -11,12 +11,13 @@
 /* eslint no-bitwise: 0 */
 'use strict';
 
-const AnimatedNode = require('./AnimatedNode');
 const AnimatedWithChildren = require('./AnimatedWithChildren');
 const NativeAnimatedHelper = require('../NativeAnimatedHelper');
 
 const invariant = require('fbjs/lib/invariant');
 const normalizeColor = require('normalize-css-color');
+
+import type AnimatedNode from './AnimatedNode';
 
 type ExtrapolateType = 'extend' | 'identity' | 'clamp';
 

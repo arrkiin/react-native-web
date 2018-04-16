@@ -10,9 +10,9 @@
  */
 'use strict';
 
-const AnimatedValue = require('./AnimatedValue');
 const AnimatedNode = require('./AnimatedNode');
 
+import type AnimatedValue from './AnimatedValue';
 import type { EndCallback } from '../animations/Animation';
 
 class AnimatedTracking extends AnimatedNode {

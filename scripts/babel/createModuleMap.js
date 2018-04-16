@@ -8,10 +8,10 @@ const path = require('path');
 const isDirectory = source => fs.lstatSync(source).isDirectory();
 const getDirectories = source =>
   fs.readdirSync(source).filter(name => isDirectory(path.join(source, name)));
-
+console.log(__dirname);
 const packagesDir = path.join(__dirname, '../../packages/');
 const exportsDir = path.join(packagesDir, 'react-native-web/src/exports');
-const moduleMapOutfile = path.join(__dirname, 'babel-plugin-react-native-web/src/moduleMap.js');
+const moduleMapOutfile = path.join(packagesDir, 'babel-plugin-react-native-web/src/moduleMap.js');
 
 const moduleMap = getDirectories(exportsDir).reduce((acc, curr) => {
   acc[curr] = true;
