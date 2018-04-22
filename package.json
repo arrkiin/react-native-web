@@ -3,7 +3,7 @@
   "version": "0.5.4",
   "name": "react-native-web-monorepo",
   "scripts": {
-    "clean": "del ./packages/*/dist",
+    "clean": "rimraf ./packages/*/dist",
     "compile": "yarn clean && cd packages/react-native-web && babel src --out-dir dist --ignore \"**/__tests__\"",
     "benchmarks": "cd packages/benchmarks && yarn build",
     "benchmarks:release": "cd packages/benchmarks && yarn release",
@@ -73,5 +73,8 @@
     "singleQuote": true
   },
   "author": "Nicolas Gallagher",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "rimraf": "^2.6.2"
+  }
 }
