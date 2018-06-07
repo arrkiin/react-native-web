@@ -26,11 +26,11 @@
     "react-art": "16.x.x",
     "react-dom": "16.x.x"
   },
-  "author": "Nicolas Gallagher",
+  "author": "Jens <arrkiin@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/necolas/react-native-web.git"
+    "url": "git://github.com/Tensiq/react-native-web.git"
   },
   "tags": [
     "react"
