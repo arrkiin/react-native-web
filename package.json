@@ -3,7 +3,7 @@
   "version": "0.5.4",
   "name": "react-native-web-monorepo",
   "scripts": {
-    "clean": "del ./packages/*/dist",
+    "clean": "rimraf ./packages/*/dist",
     "compile": "yarn clean && cd packages/react-native-web && babel src --out-dir dist --ignore \"**/__tests__\"",
     "benchmarks": "cd packages/benchmarks && yarn build",
     "benchmarks:release": "cd packages/benchmarks && yarn release",
@@ -52,7 +52,8 @@
     "react": "^16.2.0",
     "react-art": "^16.3.0",
     "react-dom": "^16.2.0",
-    "react-test-renderer": "^16.2.0"
+    "react-test-renderer": "^16.2.0",
+    "rimraf": "^2.6.2"
   },
   "workspaces": [
     "packages/*",
